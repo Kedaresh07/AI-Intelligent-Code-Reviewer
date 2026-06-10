@@ -60,7 +60,7 @@ if st.button("Review Code"):
     try:
 
         response = requests.post(
-            "http://127.0.0.1:8000/review",
+            "https://ai-intelligent-code-reviewer.onrender.com/review",
             json={"code": code}
         )
 
