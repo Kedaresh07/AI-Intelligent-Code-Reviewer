@@ -1,3 +1,4 @@
+from altair.datasets import data
 from fastapi import FastAPI
 from pydantic import BaseModel
 import subprocess
@@ -38,7 +39,9 @@ class CodeInput(BaseModel):
 def get_ai_review(code, issues,language):
 
     prompt = f"""
-You are a senior {language} developer.
+You are an expert {language} developer.
+
+Analyze the code.
 
 Language:
 {language}
@@ -49,18 +52,19 @@ Code:
 Issues:
 {issues}
 
-Provide:
-1. Summary
-2. Suggested Fixes
-3. Corrected Code
+Return ONLY valid JSON.
 
-Return ONLY valid JSON:
+Example:
 
 {{
-    "summary": "...",
-    "fixes": "...",
-    "corrected_code": "..."
+    "summary": "Problem found",
+    "fixes": "Fix description",
+    "corrected_code": "correct code here"
 }}
+
+Do not use markdown.
+Do not use ```json.
+Return JSON only.
 """
 
     response = model.generate_content(prompt)
@@ -147,6 +151,8 @@ def review_code(data: CodeInput):
     # AI Review
     # -----------------------------
 
+    import re
+
     ai_response = get_ai_review(
     data.code,
     json.dumps(issues, indent=2),
@@ -154,16 +160,36 @@ def review_code(data: CodeInput):
 )
 
     try:
-        ai_review = json.loads(ai_response)
+        ai_response = ai_response.replace("```json", "")
+        ai_response = ai_response.replace("```", "")
 
-    except Exception:
+        json_match = re.search(
+            r'\{.*\}',
+            ai_response,
+            re.DOTALL
+        )
+
+        if json_match:
+            ai_review = json.loads(
+                json_match.group()
+            )
+        else:
+            raise Exception(
+                "No JSON found in AI response"
+            )
+
+    except Exception as e:
+        print("Gemini Response:")
+        print(ai_response)
+
+        print("Parse Error:")
+        print(str(e))
 
         ai_review = {
-        "summary": "Unable to parse AI response.",
-        "fixes": "",
-        "corrected_code": ""
-    }
-
+            "summary": "Unable to parse AI response.",
+            "fixes": "",
+            "corrected_code": ""
+        }
     # -----------------------------
     # Response
     # -----------------------------
