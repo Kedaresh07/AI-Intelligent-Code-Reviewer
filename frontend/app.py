@@ -6,11 +6,25 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("AI Intelligent Code Reviewer")
+st.title("AI Multi-Language Code Reviewer")
 
 # ---------------------------
 # Input Section
 # ---------------------------
+language = st.selectbox(
+    "Select Programming Language",
+    [
+        "Python",
+        "Java",
+        "JavaScript",
+        "C++",
+        "C",
+        "C#",
+        "SQL",
+        "Go",
+        "Rust"
+    ]
+)
 
 st.subheader("Option 1: Paste Code")
 
@@ -60,8 +74,11 @@ if st.button("Review Code"):
     try:
 
         response = requests.post(
-            "https://ai-intelligent-code-reviewer.onrender.com/review",
-            json={"code": code}
+        "https://ai-intelligent-code-reviewer.onrender.com/review",
+        json={
+        "code": code,
+        "language": language
+            },
         )
 
         if response.status_code != 200:

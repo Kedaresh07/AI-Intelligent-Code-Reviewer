@@ -28,38 +28,39 @@ app = FastAPI()
 
 class CodeInput(BaseModel):
     code: str
+    language: str
 
 
 # -----------------------------
 # AI Review Function
 # -----------------------------
 
-def get_ai_review(code, issues):
+def get_ai_review(code, issues,language):
 
     prompt = f"""
-You are a senior Python developer.
+You are a senior {language} developer.
 
-Analyze this code.
+Language:
+{language}
 
-CODE:
+Code:
 {code}
 
-ISSUES:
+Issues:
 {issues}
 
-Return ONLY valid JSON.
+Provide:
+1. Summary
+2. Suggested Fixes
+3. Corrected Code
 
-Format:
+Return ONLY valid JSON:
 
 {{
-    "summary": "short summary",
-    "fixes": "list of fixes",
-    "corrected_code": "full corrected python code"
+    "summary": "...",
+    "fixes": "...",
+    "corrected_code": "..."
 }}
-
-Do not return markdown.
-Do not use ```python.
-Return JSON only.
 """
 
     response = model.generate_content(prompt)
@@ -148,7 +149,8 @@ def review_code(data: CodeInput):
 
     ai_response = get_ai_review(
     data.code,
-    json.dumps(issues, indent=2)
+    json.dumps(issues, indent=2),
+    data.language
 )
 
     try:
